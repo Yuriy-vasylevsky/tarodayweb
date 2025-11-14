@@ -1,8 +1,8 @@
 :root {
   --accent: #ffde59;
   --muted: #b4b4b4;
-  --card-w: 100px;
-  --card-h: 160px;
+  --card-w: 65px;
+  --card-h: 100px;
   --radius: 8px;
   --dur: 1000ms;
 }
@@ -54,7 +54,7 @@ header h1 {
   background: rgba(0, 0, 0, 0.35);
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 18px;
-  padding: 16px;
+  padding: 10px;
 }
 .hint {
   color: var(--muted);
@@ -63,7 +63,7 @@ header h1 {
   text-align: center;
 }
 .center {
-  margin-top: 16px;
+  margin-top: 200px;
   margin-bottom: 20px;
   display: flex;
   align-items: center;
@@ -92,11 +92,11 @@ header h1 {
 
 .cards {
   display: flex;
-  gap: 30px;
+  gap: 15px;
   align-items: flex-start;
   justify-content: center;
   flex-wrap: wrap;
-  padding: 15px;
+  padding: 5px;
 }
 
 /* Коли залишилось 3 карти — одна лінія по центру */
