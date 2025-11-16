@@ -1,25 +1,22 @@
-const tg = window.Telegram?.WebApp;
-if (tg) {
-  tg.expand();
-  tg.setHeaderColor('#2e3192');
-  tg.setBackgroundColor('#1b1464');
-  console.log("Telegram WebApp detected");
-} else {
-  console.log("Running outside Telegram (dev mode)");
-}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Перевірка файлів карт</title>
+<style>
+  body { font-family: Arial; padding:20px; background:#f4f4f4; }
+  .ok { color:green; font-weight:bold; }
+  .missing { color:red; font-weight:bold; }
+  .card-row { margin-bottom:5px; }
+</style>
+</head>
+<body>
 
-// === Елементи ===
-const introStage   = document.getElementById('stage-intro');
-const shuffleStage = document.getElementById('stage-shuffle');
-const pickStage    = document.getElementById('stage-pick');
+<h2>Перевірка наявності файлів карт</h2>
+<div id="results"></div>
 
-const btnShuffle   = document.getElementById('btn-shuffle');
-const cardsWrap    = document.getElementById('cards');
-const cardTitle    = document.getElementById('card-title');
-const sendBlock    = document.getElementById('send-block');
-const btnSend      = document.getElementById('btn-send');
-
-// === Карти (мапа як у "карти дня") ===
+<script>
+// === CARD_MAP вставляєш сюди ===
 const CARD_MAP = {
   "The Fool": { ua: "🤹‍♂️ Блазень", img: "images/cards/the_fool_upright.jpg" },
   "The Magician": { ua: "🪄 Маг", img: "images/cards/the_magician_upright.jpg" },
@@ -109,163 +106,37 @@ const CARD_MAP = {
   "King of Cups": { ua: "💧 Король Кубків", img: "images/cards/cups_king.jpg" }
 };
 
-const TAROT = Object.keys(CARD_MAP);
 
-const state = {
-  cards: [],           // 7 карт
-  selectedIndices: []  // індекси в порядку кліків
-};
+// ====== ФУНКЦІЯ ПЕРЕВІРКИ ФАЙЛІВ =========
+async function checkImages() {
+  const resultsDiv = document.getElementById("results");
 
-// === Хелпери ===
-function setStage(stage) {
-  [introStage, shuffleStage, pickStage].forEach(el => el.classList.add('hidden'));
-  stage.classList.remove('hidden');
-  stage.classList.add('fade');
-}
+  for (const [key, card] of Object.entries(CARD_MAP)) {
 
-function getRandomCards(count) {
-  const pool = [...TAROT];
-  const result = [];
+    try {
+      const response = await fetch(card.img, { method: "HEAD" });
 
-  for (let i = 0; i < count; i++) {
-    const idx = Math.floor(Math.random() * pool.length);
-    const name = pool.splice(idx, 1)[0];
-    result.push({
-      name,
-      upright: Math.random() > 0.3
-    });
-  }
-  return result;
-}
+      const exists = response.ok;
 
-function createCardNode(cardData, index) {
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.dataset.index = String(index);
+      const row = document.createElement("div");
+      row.className = "card-row";
+      row.innerHTML = exists
+        ? `✔️ <span class="ok">${key}</span> — знайдено`
+        : `❌ <span class="missing">${key}</span> — НЕ знайдено (${card.img})`;
 
-  // різна затримка анімації "float"
-  card.style.animationDelay = (Math.random() * 1.5).toFixed(2) + 's';
+      resultsDiv.appendChild(row);
 
-  const inner = document.createElement('div');
-  inner.className = 'card-inner';
-
-  const back = document.createElement('div');
-  back.className = 'face back';
-
-  const front = document.createElement('div');
-  front.className = 'face front';
-  front.style.backgroundImage = `url('${CARD_MAP[cardData.name].img}')`;
-
-  if (!cardData.upright) {
-    front.classList.add('reversed');
-  }
-
-  inner.append(back, front);
-  card.append(inner);
-
-  card.addEventListener('click', () => handleCardClick(index, card));
-
-  return card;
-}
-
-function handleCardClick(index, node) {
-  // вже вибрана / вже є 3 — не реагуємо
-  if (state.selectedIndices.includes(index)) return;
-  if (state.selectedIndices.length >= 3) return;
-
-  state.selectedIndices.push(index);
-  node.classList.add('flip', 'revealed');
-
-  const left = 3 - state.selectedIndices.length;
-  if (left > 0) {
-    cardTitle.textContent =
-      left === 2 ? "Обери ще 2 карти" :
-      left === 1 ? "Обери ще 1 карту" :
-      "Обери 3 карти";
-    return;
-  }
-
-  // вибрано 3
-  finalizeSelection();
-}
-
-function finalizeSelection() {
-  cardTitle.textContent = "Твої 3 карти:";
-
-  const allNodes = Array.from(document.querySelectorAll('.card'));
-
-  // згасити / прибрати невибрані
-  allNodes.forEach(node => {
-    const idx = Number(node.dataset.index);
-    if (!state.selectedIndices.includes(idx)) {
-      node.classList.add('dimmed');
-      node.style.opacity = '0';
-      node.style.transform = 'scale(0.85)';
-      setTimeout(() => node.remove(), 400);
+    } catch (e) {
+      const row = document.createElement("div");
+      row.className = "card-row";
+      row.innerHTML = `❌ <span class="missing">${key}</span> — ПОМИЛКА (${card.img})`;
+      resultsDiv.appendChild(row);
     }
-  });
-
-  // через мить — залишити тільки 3 та відцентрувати
-  setTimeout(() => {
-    cardsWrap.innerHTML = '';
-    cardsWrap.classList.add('center-row');
-
-    state.selectedIndices.forEach(idx => {
-      const data = state.cards[idx];
-      const node = createCardNode(data, idx);
-      node.classList.add('flip', 'revealed');
-      cardsWrap.appendChild(node);
-    });
-
-    // показати кнопку відправки
-    sendBlock.style.display = "flex";
-    setTimeout(() => sendBlock.classList.add("visible"), 20);
-  }, 420);
-}
-
-function startPickStage() {
-  state.cards = getRandomCards(7);
-  state.selectedIndices = [];
-
-  cardsWrap.classList.remove('center-row');
-  cardsWrap.innerHTML = '';
-
-  sendBlock.classList.remove('visible');
-  sendBlock.style.display = "none";
-
-  cardTitle.textContent = "Довірся своїй інтуїції та обери 3 карти";
-
-  state.cards.forEach((c, i) => {
-    cardsWrap.appendChild(createCardNode(c, i));
-  });
-
-  setStage(pickStage);
-}
-
-// === Обробники ===
-btnShuffle.addEventListener('click', () => {
-  setStage(shuffleStage);
-
-  // даємо анімації тасування відпрацювати
-  setTimeout(startPickStage, 3800);
-});
-
-btnSend.addEventListener('click', () => {
-  const chosen = state.selectedIndices.map(i => state.cards[i]);
-
-  const payload = {
-    action: "three_cards",    // ти в боті ловиш data.action == "three_cards"
-    chosen,                   // 3 карти у порядку вибору
-    candidates: state.cards   // всі 7 карт (якщо захочеш використати)
-  };
-
-  if (tg) {
-    tg.sendData(JSON.stringify(payload));
-    tg.close();
-  } else {
-    alert("DEBUG payload:\n" + JSON.stringify(payload, null, 2));
   }
-});
+}
 
-// стартова сцена
-setStage(introStage);
+checkImages();
+</script>
+
+</body>
+</html>
