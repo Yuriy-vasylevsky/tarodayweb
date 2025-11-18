@@ -376,4 +376,85 @@ footer {
   object-fit: contain;
 }
 
-/* .hidden вже є у тебе, вона ховає модалку */
+/* КОМПАКТНИЙ РЕЖИМ ФІНАЛЬНИХ 3 КАРТ */
+#stage-pick.compact {
+  padding-top: 20px !important;
+  padding-bottom: 20px !important;
+  min-height: auto !important;
+  height: auto !important;
+}
+
+#stage-pick.compact .cards {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+#stage-pick.compact .hint {
+  margin-top: 4px !important;
+  margin-bottom: 10px !important;
+}
+
+
+
+/* Назви вибраних карт */
+.selected-names {
+  text-align: center;
+  font-size: 18px;
+  color: #ffde59;
+  font-weight: 700;
+  margin: 0 auto 12px auto;
+  padding-top: 6px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  line-height: 1.22;
+  text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+
+
+.selected-names.hidden {
+  display: none;
+}
+
+
+/* КОМПАКТНИЙ РЕЖИМ ФІНАЛЬНИХ 3 КАРТ */
+#stage-pick.compact {
+  padding-top: 20px !important;
+  padding-bottom: 20px !important;
+  min-height: auto !important;
+  height: auto !important;
+}
+
+#stage-pick.compact .cards {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+#stage-pick.compact .hint {
+  margin-top: 4px !important;
+  margin-bottom: 10px !important;
+}
+
+/* Назви вибраних карт */
+.selected-names {
+  text-align: center;
+  font-size: 18px;
+  color: #ffde59;
+  font-weight: 700;
+  margin: 0 auto 12px auto;
+  padding-top: 6px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  line-height: 1.22;
+  text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.selected-names.hidden {
+  display: none;
+}

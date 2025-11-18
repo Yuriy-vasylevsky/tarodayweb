@@ -27,6 +27,17 @@ const cardModalImg = document.getElementById('card-modal-img');
 // звук тасування
 const shuffleAudio = document.getElementById('shuffle-audio');
 const flipAudio = document.getElementById('flip-audio');
+
+// скидаємо фіксовану висоту, коли 3 карти вже на місці
+setTimeout(() => {
+  cardsWrap.style.height = 'auto';
+}, 300);
+
+
+if (shuffleAudio) {
+  flipAudio.volume = 1; // від 0.0 до 1.0
+}
+
 // === Карти (мапа як у "карти дня") ===
 const CARD_MAP = {
   "The Fool": { ua: "🤹‍♂️ Блазень", img: "images/cards/the_fool_upright.jpg" },
@@ -197,6 +208,8 @@ function handleCardClick(index, node) {
   finalizeSelection();
 }
 
+
+
 // function finalizeSelection() {
 //   cardTitle.textContent = "Твої 3 карти:";
 
@@ -207,7 +220,7 @@ function handleCardClick(index, node) {
 //   const wrapHeight = cardsWrap.offsetHeight;
 //   const wrapWidth = cardsWrap.offsetWidth;
 
-//   // фіксуємо висоту контейнера, щоб при absolute він не схлопнувся
+//   // фіксуємо висоту контейнера, щоб при переведенні карт в absolute він не схлопнувся
 //   cardsWrap.style.height = wrapHeight + 'px';
 
 //   allNodes.forEach(node => {
@@ -252,6 +265,27 @@ function handleCardClick(index, node) {
 //       node.classList.add('revealed'); // підсвітка
 //     });
 
+//     // клік по фінальним трьом картам — відкривати повноекранний перегляд
+//     selectedNodes.forEach(node => {
+//       const idx = Number(node.dataset.index);
+//       const data = state.cards[idx];
+//       node.addEventListener('click', () => openCardModal(data));
+//     });
+
+//     // робимо сцену компактною
+//     const stagePick = document.getElementById('stage-pick');
+//     if (stagePick) {
+//       stagePick.classList.add('compact');
+//     }
+
+//     // 🔻 через мить після того, як карти стали на місце —
+//     // повністю прибираємо фіксовану висоту контейнера з картами
+//     setTimeout(() => {
+//       cardsWrap.style.removeProperty('height'); // забрали inline-стиль height
+//       // на випадок кешу стилів:
+//       // cardsWrap.style.height = '';
+//     }, 400);
+
 //     // показати кнопку відправки після з’їзду в центр
 //     setTimeout(() => {
 //       sendBlock.style.display = "flex";
@@ -264,71 +298,79 @@ function finalizeSelection() {
   cardTitle.textContent = "Твої 3 карти:";
 
   const allNodes = Array.from(document.querySelectorAll('.card'));
-  const selectedNodes = [];
 
-  const wrapRect = cardsWrap.getBoundingClientRect();
-  const wrapHeight = cardsWrap.offsetHeight;
-  const wrapWidth = cardsWrap.offsetWidth;
+  // 3 вибрані карти (дані)
+  const chosenData = state.selectedIndices.map(i => state.cards[i]);
 
-  // фіксуємо висоту контейнера, щоб при absolute він не схлопнувся
-  cardsWrap.style.height = wrapHeight + 'px';
+  // показуємо назви карт
+  const namesDiv = document.getElementById("selected-names");
+  if (namesDiv) {
+    namesDiv.innerHTML = state.selectedIndices
+      .map(i => CARD_MAP[state.cards[i].name].ua)
+      .map(txt => `<div>${txt}</div>`)
+      .join("");
+    namesDiv.classList.remove("hidden");
+  }
 
+  // плавно згасити невибрані карти
   allNodes.forEach(node => {
     const idx = Number(node.dataset.index);
-
-    if (state.selectedIndices.includes(idx)) {
-      selectedNodes.push(node);
-
-      const rect = node.getBoundingClientRect();
-      const currentLeft = rect.left - wrapRect.left;
-      const currentTop = rect.top - wrapRect.top;
-
-      // переводимо вибрані карти в absolute з їх поточного місця
-      node.style.position = 'absolute';
-      node.style.left = currentLeft + 'px';
-      node.style.top = currentTop + 'px';
-      node.style.zIndex = '2';
-    } else {
-      // згасити / прибрати невибрані
+    if (!state.selectedIndices.includes(idx)) {
       node.classList.add('dimmed');
       node.style.opacity = '0';
       node.style.transform = 'scale(0.85)';
-      setTimeout(() => node.remove(), 400);
+      setTimeout(() => node.remove(), 250);
     }
   });
 
-  if (!selectedNodes.length) return;
-
-  const cardWidth = selectedNodes[0].offsetWidth;
-  const cardHeight = selectedNodes[0].offsetHeight;
-  const gap = 24;
-  const totalWidth = cardWidth * selectedNodes.length + gap * (selectedNodes.length - 1);
-  const startX = (wrapWidth - totalWidth) / 2;
-  const targetTop = (wrapHeight - cardHeight) / 2;
-
-  // невелика пауза, щоб невибрані встигли зникнути
+  // через мить перемальовуємо 3 фінальні карти по центру з красивою анімацією
   setTimeout(() => {
-    selectedNodes.forEach((node, idx) => {
-      const targetLeft = startX + idx * (cardWidth + gap);
-      node.style.left = targetLeft + 'px';
-      node.style.top = targetTop + 'px';
-      node.classList.add('revealed'); // підсвітка
-    });
+    // очищаємо контейнер повністю
+    cardsWrap.innerHTML = '';
+    cardsWrap.classList.add('center-row');
+    cardsWrap.style.removeProperty('height');
 
-    // 🔍 додаємо клік по фінальним трьом картам — відкривати повноекранний перегляд
-    selectedNodes.forEach(node => {
-      const idx = Number(node.dataset.index);
-      const data = state.cards[idx];
+    // компактний режим сцени
+    const stagePick = document.getElementById('stage-pick');
+    if (stagePick) stagePick.classList.add('compact');
+
+    chosenData.forEach((data, idx) => {
+      const node = createCardNode(data, idx);
+
+      // без "плавання" в фіналі
+      node.style.animation = 'none';
+
+      // стартовий стан для анімації
+      node.style.opacity = '0';
+      node.style.transform = 'scale(0.8) translateY(12px)';
+
+      // карта вже відкрита
+      node.classList.add('flip', 'revealed');
+
+      // клік — повноекранний перегляд
       node.addEventListener('click', () => openCardModal(data));
+
+      cardsWrap.appendChild(node);
+
+      // тригеримо плавний в'їзд (два requestAnimationFrame, щоб браузер встиг застосувати стартовий стиль)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          node.style.opacity = '1';
+          node.style.transform = 'scale(1) translateY(0)';
+        });
+      });
     });
 
-    // показати кнопку відправки після з’їзду в центр
+    // показати кнопку "Зробити розклад"
     setTimeout(() => {
       sendBlock.style.display = "flex";
       setTimeout(() => sendBlock.classList.add("visible"), 20);
-    }, 450);
-  }, 420);
+    }, 260);
+  }, 280);
 }
+
+
+
 
 
 function startPickStage() {
@@ -430,7 +472,7 @@ function handleCardClick(index, node) {
 }
 
 if (flipAudio) {
-  flipAudio.volume = 0.3; // від 0.0 до 1.0
+  flipAudio.volume = 0.2; // від 0.0 до 1.0
 }
 
 function openCardModal(cardData) {
@@ -460,3 +502,4 @@ function closeCardModal() {
 if (cardModal) {
   cardModal.addEventListener('click', closeCardModal);
 }
+
