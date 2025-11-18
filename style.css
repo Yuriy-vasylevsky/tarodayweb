@@ -1,12 +1,28 @@
+/* 🌈 1. Глобальні змінні теми */
 :root {
-  --accent: #ffde59;
-  --muted: #b4b4b4;
-  --card-w: 65px;
-  --card-h: 100px;
-  --radius: 8px;
-  --dur: 1000ms;
+  --accent: #ffde59;      /* Жовтий міньйон-акцент */
+  --muted: #b4b4b4;       /* Приглушений сірий текст */
+  --card-w: 90px;         /* Ширина карти */
+  --card-h: 150px;        /* Висота карти */
+  --radius: 8px;          /* Радіус скруглення */
+  --dur: 1000ms;          /* Тривалість фліпу карти (обертання) */
 }
 
+/* 📱 Для дуже маленьких екранів (наприклад, iPhone SE, 370px і менше) */
+@media (max-width: 370px) {
+  :root {
+    --card-w: 80px;   /* ширина карти */
+    --card-h: 130px;  /* висота карти */
+  }
+
+  .cards {
+    gap: 10px; /* трохи менший відступ між картами */
+  }
+}
+
+
+
+/* Базова сітка та фон */
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 
@@ -21,13 +37,15 @@ body {
   background-position: center;
 }
 
+/* 📐 2. Загальне розташування контенту */
 .wrap {
   min-height: 100%;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr auto;  /* header, main, footer */
   gap: 40px;
 }
 
+/* 🧾 3. Хедер */
 header {
   text-align: center;
   padding: 16px 8px 0;
@@ -44,6 +62,7 @@ header h1 {
   margin: 4px 0 0;
 }
 
+/* 🪄 4. Панель / сцени (сторінки) */
 .panel {
   width: 100%;
   max-width: 880px;
@@ -62,6 +81,8 @@ header h1 {
   margin: 6px 0 14px;
   text-align: center;
 }
+
+/* Центрований контейнер (кнопка "Перемішати") */
 .center {
   margin-top: 200px;
   margin-bottom: 20px;
@@ -72,6 +93,7 @@ header h1 {
   flex-wrap: wrap;
 }
 
+/* 🔘 5. Кнопки */
 .btn {
   appearance: none;
   border: 2px solid var(--accent);
@@ -90,6 +112,7 @@ header h1 {
 }
 .btn:active { transform: translateY(1px); }
 
+/* 🃏 6. Контейнер для карт (7 карт / потім 3 картки) */
 .cards {
   display: flex;
   gap: 15px;
@@ -97,24 +120,30 @@ header h1 {
   justify-content: center;
   flex-wrap: wrap;
   padding: 5px;
-  position: relative; /* для абсолютного позиціонування вибраних карт */
+  position: relative;  /* ВАЖЛИВО: щоб 3 вибрані карти можна було ставити absolutely */
 }
 
-/* Коли залишилось 3 карти — одна лінія по центру (залишаю, якщо раптом захочеш використати) */
+/* Якщо захочеш – режим однієї лінії по центру */
 .cards.center-row {
   flex-wrap: nowrap;
   justify-content: center;
   gap: 24px;
 }
 
-/* === Карти: плавання та фліп === */
+/* 🎴 7. Стиль однієї карти + анімації */
 .card {
   width: var(--card-w);
   height: var(--card-h);
   perspective: 1000px;
   border-radius: var(--radius);
   position: relative;
-  transition: transform 0.4s ease, left 0.4s ease, top 0.4s ease;
+
+  /* ❗ Ось тут керується швидкість руху карти, коли її left/top змінює JS
+     transform – для масштабування / hover
+     left/top – для "з'їзду" 3 карт у центр */
+  transition: transform 1s ease, left 1s ease, top 1s ease;
+
+  /* "Плаваюча" анімація карт у стані вибору */
   animation: float 3.4s ease-in-out infinite;
 }
 
@@ -123,23 +152,26 @@ header h1 {
   cursor: pointer;
 }
 
-/* Коли карта вже відкрита — зупиняємо "плавання" */
+/* Коли карта вже відкрита – зупиняємо плавання */
 .card.revealed {
   animation: none;
 }
 
+/* Фліп карти (обертання по Y) */
 .card.flip .card-inner {
   transform: rotateY(180deg);
 }
 
+/* Внутрішній контейнер для лицьової/зворотної сторони */
 .card-inner {
   position: relative;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transition: transform var(--dur) ease;
+  transition: transform var(--dur) ease;  /* тривалість фліпу */
 }
 
+/* Сторони карти */
 .face {
   position: absolute;
   inset: 0;
@@ -150,10 +182,12 @@ header h1 {
               inset 0 0 0 2px rgba(255, 222, 89, .4);
 }
 
+/* Задня сторона – сорочка */
 .face.back {
   background: url("images/cards/back_minion.jpg") center/cover no-repeat;
 }
 
+/* Передня сторона – зображення карти */
 .face.front {
   transform: rotateY(180deg);
   background-size: cover;
@@ -161,11 +195,12 @@ header h1 {
   transition: transform 0.6s ease;
 }
 
-/* перевернуті карти — реально догори ногами */
+/* Перевернута карта (догори ногами) */
 .face.front.reversed {
   transform: rotateY(180deg) rotate(180deg);
 }
 
+/* 🔋 8. Прогрес-бар (якщо буде використовуватись) */
 .progress {
   height: 10px;
   background: rgba(255, 255, 255, .15);
@@ -180,6 +215,7 @@ header h1 {
   transition: width .35s ease;
 }
 
+/* 📜 9. Футер */
 footer {
   text-align: center;
   color: #bfbfbf;
@@ -187,50 +223,50 @@ footer {
   padding: 12px;
 }
 
+/* Станові класи */
 .hidden { display: none !important; }
 .fade { animation: fade .35s ease both; }
 
+/* Анімація появи сцени */
 @keyframes fade {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Легка "плаваюча" анімація карт */
+/* 🌊 10. "Плаваюча" анімація карт у режимі вибору */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
 }
 
-/* Світіння вибраної карти */
+/* Світіння відкритої карти */
 .card.revealed {
   box-shadow: 0 0 20px rgba(255, 222, 89, 0.8),
               0 0 40px rgba(255, 222, 89, 0.4),
               0 0 60px rgba(255, 222, 89, 0.2);
   transform: scale(1.04);
-  transition: all 0.4s ease;
+  transition: all 1.2s ease;
 }
 
-/* Затемнення всіх інших */
+/* Затемнення невибраних */
 .card.dimmed {
   filter: brightness(0.5) blur(0.5px);
   transform: scale(0.95);
-  transition: all 0.4s ease;
+  transition: all 0.8s ease;
 }
 
-/* Плавна анімація появи кнопки */
+/* Плавна поява блоку з кнопкою "Зробити розклад" */
 #send-block {
   opacity: 0;
   transform: translateY(8px);
   transition: opacity .4s ease, transform .4s ease;
 }
-
 #send-block.visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* === НОВА АНІМАЦІЯ SHUFFLE === */
-
+/* 🎬 11. Сцена тасування */
 .shuffle-scene {
   width: 100%;
   height: 380px;
@@ -238,6 +274,7 @@ footer {
   margin-top: 15px;
 }
 
+/* Стіл для тасування */
 .shuffle-table {
   width: 100%;
   height: 350px;
@@ -249,6 +286,7 @@ footer {
   border: 2px solid rgba(255,255,255,0.15);
 }
 
+/* Зона, де літають сорочки карт під час тасування */
 .shuffle-deck {
   position: absolute;
   bottom: 200px;
@@ -258,6 +296,7 @@ footer {
   height: 120px;
 }
 
+/* Окремі сорочки карт анімації тасування */
 .s-card {
   width: 80px;
   height: 120px;
@@ -271,9 +310,10 @@ footer {
   animation: shuffle 3s infinite ease-in-out;
 }
 
-/* Унікальні траєкторії для 20 карт */
+/* Різні траєкторії для 20 карт – кожна має свої зсуви та затримку */
 .c1  { animation-delay: 0s;   --x1: -60px; --y1: 40px;  --r1: -20deg; --x2: -110px; --y2: 90px;  --r2: -45deg; }
 .c2  { animation-delay: 0.1s; --x1: 70px;  --y1: 50px;  --r1: 35deg;  --x2: 110px;  --y2: 120px; --r2: 60deg; }
+/* ... і т.д. до c20 ... */
 .c3  { animation-delay: 0.2s; --x1: -30px; --y1: 80px;  --r1: 10deg;  --x2: -65px;  --y2: 150px; --r2: 25deg; }
 .c4  { animation-delay: 0.3s; --x1: 40px;  --y1: 100px; --r1: -30deg; --x2: 70px;   --y2: 160px; --r2: -70deg; }
 .c5  { animation-delay: 0.4s; --x1: -90px; --y1: 60px;  --r1: 45deg;  --x2: -130px; --y2: 110px; --r2: 80deg; }
@@ -293,6 +333,7 @@ footer {
 .c19 { animation-delay: 1.8s; --x1: -20px; --y1: 150px; --r1: -5deg;  --x2: -50px;  --y2: 210px;--r2: -25deg; }
 .c20 { animation-delay: 1.9s; --x1: 80px;  --y1: 70px;  --r1: -30deg; --x2: 130px;  --y2: 140px;--r2: -65deg; }
 
+/* Ключова анімація тасування */
 @keyframes shuffle {
   0%   { opacity: 0; transform: translate(0,0) rotate(0deg);}
   15%  { opacity: 1; transform: translate(var(--x1), var(--y1)) rotate(var(--r1)); }
