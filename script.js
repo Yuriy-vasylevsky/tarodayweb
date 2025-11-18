@@ -20,6 +20,9 @@ const cardsWrap    = document.getElementById('cards');
 const cardTitle    = document.getElementById('card-title');
 const sendBlock    = document.getElementById('send-block');
 const btnSend      = document.getElementById('btn-send');
+// модалка для повноекранної карти
+const cardModal = document.getElementById('card-modal');
+const cardModalImg = document.getElementById('card-modal-img');
 
 // звук тасування
 const shuffleAudio = document.getElementById('shuffle-audio');
@@ -194,6 +197,69 @@ function handleCardClick(index, node) {
   finalizeSelection();
 }
 
+// function finalizeSelection() {
+//   cardTitle.textContent = "Твої 3 карти:";
+
+//   const allNodes = Array.from(document.querySelectorAll('.card'));
+//   const selectedNodes = [];
+
+//   const wrapRect = cardsWrap.getBoundingClientRect();
+//   const wrapHeight = cardsWrap.offsetHeight;
+//   const wrapWidth = cardsWrap.offsetWidth;
+
+//   // фіксуємо висоту контейнера, щоб при absolute він не схлопнувся
+//   cardsWrap.style.height = wrapHeight + 'px';
+
+//   allNodes.forEach(node => {
+//     const idx = Number(node.dataset.index);
+
+//     if (state.selectedIndices.includes(idx)) {
+//       selectedNodes.push(node);
+
+//       const rect = node.getBoundingClientRect();
+//       const currentLeft = rect.left - wrapRect.left;
+//       const currentTop = rect.top - wrapRect.top;
+
+//       // переводимо вибрані карти в absolute з їх поточного місця
+//       node.style.position = 'absolute';
+//       node.style.left = currentLeft + 'px';
+//       node.style.top = currentTop + 'px';
+//       node.style.zIndex = '2';
+//     } else {
+//       // згасити / прибрати невибрані
+//       node.classList.add('dimmed');
+//       node.style.opacity = '0';
+//       node.style.transform = 'scale(0.85)';
+//       setTimeout(() => node.remove(), 400);
+//     }
+//   });
+
+//   if (!selectedNodes.length) return;
+
+//   const cardWidth = selectedNodes[0].offsetWidth;
+//   const cardHeight = selectedNodes[0].offsetHeight;
+//   const gap = 24;
+//   const totalWidth = cardWidth * selectedNodes.length + gap * (selectedNodes.length - 1);
+//   const startX = (wrapWidth - totalWidth) / 2;
+//   const targetTop = (wrapHeight - cardHeight) / 2;
+
+//   // невелика пауза, щоб невибрані встигли зникнути
+//   setTimeout(() => {
+//     selectedNodes.forEach((node, idx) => {
+//       const targetLeft = startX + idx * (cardWidth + gap);
+//       node.style.left = targetLeft + 'px';
+//       node.style.top = targetTop + 'px';
+//       node.classList.add('revealed'); // підсвітка
+//     });
+
+//     // показати кнопку відправки після з’їзду в центр
+//     setTimeout(() => {
+//       sendBlock.style.display = "flex";
+//       setTimeout(() => sendBlock.classList.add("visible"), 20);
+//     }, 450);
+//   }, 420);
+// }
+
 function finalizeSelection() {
   cardTitle.textContent = "Твої 3 карти:";
 
@@ -249,6 +315,13 @@ function finalizeSelection() {
       node.classList.add('revealed'); // підсвітка
     });
 
+    // 🔍 додаємо клік по фінальним трьом картам — відкривати повноекранний перегляд
+    selectedNodes.forEach(node => {
+      const idx = Number(node.dataset.index);
+      const data = state.cards[idx];
+      node.addEventListener('click', () => openCardModal(data));
+    });
+
     // показати кнопку відправки після з’їзду в центр
     setTimeout(() => {
       sendBlock.style.display = "flex";
@@ -256,6 +329,7 @@ function finalizeSelection() {
     }, 450);
   }, 420);
 }
+
 
 function startPickStage() {
   state.cards = getRandomCards(9);
@@ -357,4 +431,32 @@ function handleCardClick(index, node) {
 
 if (flipAudio) {
   flipAudio.volume = 0.3; // від 0.0 до 1.0
+}
+
+function openCardModal(cardData) {
+  if (!cardModal || !cardModalImg) return;
+
+  const info = CARD_MAP[cardData.name];
+  if (!info) return;
+
+  cardModalImg.src = info.img;
+
+  // перевернута карта — крутимо її
+  if (cardData.upright) {
+    cardModalImg.style.transform = 'none';
+  } else {
+    cardModalImg.style.transform = 'rotate(180deg)';
+  }
+
+  cardModal.classList.remove('hidden');
+}
+
+function closeCardModal() {
+  if (!cardModal) return;
+  cardModal.classList.add('hidden');
+}
+
+// закриваємо по кліку будь-де по модалці
+if (cardModal) {
+  cardModal.addEventListener('click', closeCardModal);
 }

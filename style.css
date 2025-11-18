@@ -341,3 +341,39 @@ footer {
   85%  { opacity: 1; transform: translate(0,0) rotate(0deg); }
   100% { opacity: 0; }
 }
+
+
+/* 🖼  Повноекранний перегляд карти */
+.card-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.card-modal-inner {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9),
+              0 0 30px rgba(255, 222, 89, 0.4);
+}
+
+.card-modal-inner img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* .hidden вже є у тебе, вона ховає модалку */
