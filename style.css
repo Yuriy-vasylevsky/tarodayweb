@@ -379,7 +379,7 @@ footer {
 /* КОМПАКТНИЙ РЕЖИМ ФІНАЛЬНИХ 3 КАРТ */
 #stage-pick.compact {
   padding-top: 20px !important;
-  padding-bottom: 20px !important;
+  /* padding-bottom: 20px !important; */
   min-height: auto !important;
   height: auto !important;
 }
@@ -423,7 +423,7 @@ footer {
 /* КОМПАКТНИЙ РЕЖИМ ФІНАЛЬНИХ 3 КАРТ */
 #stage-pick.compact {
   padding-top: 20px !important;
-  padding-bottom: 20px !important;
+  /* padding-bottom: 20px !important; */
   min-height: auto !important;
   height: auto !important;
 }
@@ -444,7 +444,7 @@ footer {
   font-size: 18px;
   color: #ffde59;
   font-weight: 700;
-  margin: 0 auto 12px auto;
+  margin: 10 auto 20px auto;
   padding-top: 6px;
 
   display: flex;
