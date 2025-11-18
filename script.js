@@ -1,11 +1,8 @@
-
-
 const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.expand();
   tg.setHeaderColor('#2e3192');
   tg.setBackgroundColor('#1b1464');
-  console.log("Telegram WebApp detected");
 } else {
   console.log("Running outside Telegram (dev mode)");
 }
@@ -20,25 +17,18 @@ const cardsWrap    = document.getElementById('cards');
 const cardTitle    = document.getElementById('card-title');
 const sendBlock    = document.getElementById('send-block');
 const btnSend      = document.getElementById('btn-send');
-// модалка для повноекранної карти
-const cardModal = document.getElementById('card-modal');
+
+const cardModal    = document.getElementById('card-modal');
 const cardModalImg = document.getElementById('card-modal-img');
 
-// звук тасування
 const shuffleAudio = document.getElementById('shuffle-audio');
-const flipAudio = document.getElementById('flip-audio');
+const flipAudio    = document.getElementById('flip-audio');
 
-// скидаємо фіксовану висоту, коли 3 карти вже на місці
-setTimeout(() => {
-  cardsWrap.style.height = 'auto';
-}, 300);
-
-
-if (shuffleAudio) {
-  flipAudio.volume = 1; // від 0.0 до 1.0
+if (flipAudio) {
+  flipAudio.volume = 0.25;
 }
 
-// === Карти (мапа як у "карти дня") ===
+// === Карти (повна мапа) ===
 const CARD_MAP = {
   "The Fool": { ua: "🤹‍♂️ Блазень", img: "images/cards/the_fool_upright.jpg" },
   "The Magician": { ua: "🪄 Маг", img: "images/cards/the_magician_upright.jpg" },
@@ -131,8 +121,8 @@ const CARD_MAP = {
 const TAROT = Object.keys(CARD_MAP);
 
 const state = {
-  cards: [],           // 7 карт
-  selectedIndices: []  // індекси в порядку кліків
+  cards: [],          // 9 карт
+  selectedIndices: [] // індекси в порядку кліків
 };
 
 // === Хелпери ===
@@ -145,14 +135,10 @@ function setStage(stage) {
 function getRandomCards(count) {
   const pool = [...TAROT];
   const result = [];
-
   for (let i = 0; i < count; i++) {
     const idx = Math.floor(Math.random() * pool.length);
     const name = pool.splice(idx, 1)[0];
-    result.push({
-      name,
-      upright: Math.random() > 0.3
-    });
+    result.push({ name, upright: Math.random() > 0.3 });
   }
   return result;
 }
@@ -161,8 +147,6 @@ function createCardNode(cardData, index) {
   const card = document.createElement('div');
   card.className = 'card';
   card.dataset.index = String(index);
-
-  // різна затримка анімації "float"
   card.style.animationDelay = (Math.random() * 1.5).toFixed(2) + 's';
 
   const inner = document.createElement('div');
@@ -174,7 +158,6 @@ function createCardNode(cardData, index) {
   const front = document.createElement('div');
   front.className = 'face front';
   front.style.backgroundImage = `url('${CARD_MAP[cardData.name].img}')`;
-
   if (!cardData.upright) {
     front.classList.add('reversed');
   }
@@ -187,12 +170,18 @@ function createCardNode(cardData, index) {
   return card;
 }
 
+// === Клік по карті ===
 function handleCardClick(index, node) {
-  // вже вибрана / вже є 3 — не реагуємо
   if (state.selectedIndices.includes(index)) return;
   if (state.selectedIndices.length >= 3) return;
 
   state.selectedIndices.push(index);
+
+  if (flipAudio) {
+    flipAudio.currentTime = 0;
+    flipAudio.play().catch(() => {});
+  }
+
   node.classList.add('flip', 'revealed');
 
   const left = 3 - state.selectedIndices.length;
@@ -204,23 +193,34 @@ function handleCardClick(index, node) {
     return;
   }
 
-  // вибрано 3
-  finalizeSelection();
+  // після 3-ї карти даємо фліпу дограти
+  setTimeout(finalizeSelection, 700);
 }
 
-
-
+// === Фінальна анімація: 3 карти з’їжджають в центр зі своїх місць ===
 // function finalizeSelection() {
 //   cardTitle.textContent = "Твої 3 карти:";
 
 //   const allNodes = Array.from(document.querySelectorAll('.card'));
 //   const selectedNodes = [];
 
-//   const wrapRect = cardsWrap.getBoundingClientRect();
+//   const wrapRect   = cardsWrap.getBoundingClientRect();
 //   const wrapHeight = cardsWrap.offsetHeight;
-//   const wrapWidth = cardsWrap.offsetWidth;
+//   const wrapWidth  = cardsWrap.offsetWidth;
 
-//   // фіксуємо висоту контейнера, щоб при переведенні карт в absolute він не схлопнувся
+//   // 3 вибрані карти (дані)
+//   const chosenData = state.selectedIndices.map(i => state.cards[i]);
+
+//   // показати назви вибраних карт
+//   const namesDiv = document.getElementById("selected-names");
+//   if (namesDiv) {
+//     namesDiv.innerHTML = chosenData
+//       .map(c => `<div>${CARD_MAP[c.name].ua}</div>`)
+//       .join("");
+//     namesDiv.classList.remove("hidden");
+//   }
+
+//   // фіксуємо висоту контейнера, щоб при absolute він не схлопнувся
 //   cardsWrap.style.height = wrapHeight + 'px';
 
 //   allNodes.forEach(node => {
@@ -231,158 +231,168 @@ function handleCardClick(index, node) {
 
 //       const rect = node.getBoundingClientRect();
 //       const currentLeft = rect.left - wrapRect.left;
-//       const currentTop = rect.top - wrapRect.top;
+//       const currentTop  = rect.top  - wrapRect.top;
 
 //       // переводимо вибрані карти в absolute з їх поточного місця
 //       node.style.position = 'absolute';
 //       node.style.left = currentLeft + 'px';
-//       node.style.top = currentTop + 'px';
+//       node.style.top  = currentTop  + 'px';
 //       node.style.zIndex = '2';
+//       node.classList.add('revealed');
 //     } else {
-//       // згасити / прибрати невибрані
+//       // затемнюємо і прибираємо невибрані
 //       node.classList.add('dimmed');
 //       node.style.opacity = '0';
 //       node.style.transform = 'scale(0.85)';
-//       setTimeout(() => node.remove(), 400);
+//       setTimeout(() => node.remove(), 350);
 //     }
 //   });
 
 //   if (!selectedNodes.length) return;
 
-//   const cardWidth = selectedNodes[0].offsetWidth;
+//   const cardWidth  = selectedNodes[0].offsetWidth;
 //   const cardHeight = selectedNodes[0].offsetHeight;
-//   const gap = 24;
+//   const gap        = 24;
 //   const totalWidth = cardWidth * selectedNodes.length + gap * (selectedNodes.length - 1);
-//   const startX = (wrapWidth - totalWidth) / 2;
-//   const targetTop = (wrapHeight - cardHeight) / 2;
+//   const startX     = (wrapWidth - totalWidth) / 2;
+//   const targetTop  = (wrapHeight - cardHeight) / 2;
 
-//   // невелика пауза, щоб невибрані встигли зникнути
+//   // компактний режим сцени (менше сірої зони)
+//   pickStage.classList.add('compact');
+
+//   // даємо невибраним час згаснути, потім з'їжджаємо 3 карти в центр
 //   setTimeout(() => {
 //     selectedNodes.forEach((node, idx) => {
 //       const targetLeft = startX + idx * (cardWidth + gap);
 //       node.style.left = targetLeft + 'px';
-//       node.style.top = targetTop + 'px';
-//       node.classList.add('revealed'); // підсвітка
-//     });
+//       node.style.top  = targetTop  + 'px';
+//       node.style.animation = 'none'; // вже без "float"
 
-//     // клік по фінальним трьом картам — відкривати повноекранний перегляд
-//     selectedNodes.forEach(node => {
-//       const idx = Number(node.dataset.index);
-//       const data = state.cards[idx];
+//       // клік — повноекранний перегляд
+//       const cardIndex = state.selectedIndices[idx];
+//       const data = state.cards[cardIndex];
 //       node.addEventListener('click', () => openCardModal(data));
 //     });
 
-//     // робимо сцену компактною
-//     const stagePick = document.getElementById('stage-pick');
-//     if (stagePick) {
-//       stagePick.classList.add('compact');
-//     }
+//     // трішки зменшуємо висоту контейнера під 3 карти
+//     cardsWrap.style.height = (cardHeight + 30) + 'px';
 
-//     // 🔻 через мить після того, як карти стали на місце —
-//     // повністю прибираємо фіксовану висоту контейнера з картами
-//     setTimeout(() => {
-//       cardsWrap.style.removeProperty('height'); // забрали inline-стиль height
-//       // на випадок кешу стилів:
-//       // cardsWrap.style.height = '';
-//     }, 400);
-
-//     // показати кнопку відправки після з’їзду в центр
+//     // показати кнопку "Зробити розклад"
 //     setTimeout(() => {
 //       sendBlock.style.display = "flex";
-//       setTimeout(() => sendBlock.classList.add("visible"), 20);
-//     }, 450);
-//   }, 420);
+//       requestAnimationFrame(() => {
+//         sendBlock.classList.add("visible");
+//       });
+//     }, 500);
+//   }, 380);
 // }
 
 function finalizeSelection() {
   cardTitle.textContent = "Твої 3 карти:";
 
-  const allNodes = Array.from(document.querySelectorAll('.card'));
+  const allNodes = Array.from(document.querySelectorAll(".card"));
 
-  // 3 вибрані карти (дані)
+  const wrapRect = cardsWrap.getBoundingClientRect();
+  const wrapWidth = cardsWrap.offsetWidth;
+  const wrapHeight = cardsWrap.offsetHeight;
+
+  const selected = [];
   const chosenData = state.selectedIndices.map(i => state.cards[i]);
 
-  // показуємо назви карт
+  // Показуємо назви
   const namesDiv = document.getElementById("selected-names");
-  if (namesDiv) {
-    namesDiv.innerHTML = state.selectedIndices
-      .map(i => CARD_MAP[state.cards[i].name].ua)
-      .map(txt => `<div>${txt}</div>`)
-      .join("");
-    namesDiv.classList.remove("hidden");
-  }
+  namesDiv.innerHTML = chosenData
+    .map(c => `<div>${CARD_MAP[c.name].ua}</div>`)
+    .join("");
+  namesDiv.classList.remove("hidden");
 
-  // плавно згасити невибрані карти
+  // Фіксована висота під анімацію
+  cardsWrap.style.height = wrapHeight + "px";
+
+  // --- 1. Переводимо вибрані карти в absolute
   allNodes.forEach(node => {
     const idx = Number(node.dataset.index);
-    if (!state.selectedIndices.includes(idx)) {
-      node.classList.add('dimmed');
-      node.style.opacity = '0';
-      node.style.transform = 'scale(0.85)';
-      setTimeout(() => node.remove(), 250);
+
+    if (state.selectedIndices.includes(idx)) {
+      const rect = node.getBoundingClientRect();
+      const left = rect.left - wrapRect.left;
+      const top = rect.top - wrapRect.top;
+
+      node.style.position = "absolute";
+      node.style.left = left + "px";
+      node.style.top = top + "px";
+      node.style.zIndex = "10";
+      node.style.animation = "none";
+
+      selected.push({ node, idx });
+    } else {
+      // Невибрані — плавно зникають
+      node.classList.add("dimmed");
+      node.style.opacity = "0";
+      node.style.transform = "scale(0.85)";
+      setTimeout(() => node.remove(), 350);
     }
   });
 
-  // через мить перемальовуємо 3 фінальні карти по центру з красивою анімацією
+  // --- 2. Центр для 3 карт
+  const cardW = selected[0].node.offsetWidth;
+  const gap = 24;
+  const totalWidth = cardW * 3 + gap * 2;
+  const startX = (wrapWidth - totalWidth) / 2;
+
+  // Картки повинні стояти трохи нижче центру сцени
+  const cardH = selected[0].node.offsetHeight;
+  const targetTop = (wrapHeight - cardH) * 0.10;
+
+  pickStage.classList.add("compact");
+  pickStage.classList.add("final-compact");
+
+
+  // --- 3. Плавний переїзд у центр
   setTimeout(() => {
-    // очищаємо контейнер повністю
-    cardsWrap.innerHTML = '';
-    cardsWrap.classList.add('center-row');
-    cardsWrap.style.removeProperty('height');
+    selected.forEach(({ node }, i) => {
+      const finalLeft = startX + i * (cardW + gap);
 
-    // компактний режим сцени
-    const stagePick = document.getElementById('stage-pick');
-    if (stagePick) stagePick.classList.add('compact');
+      node.style.transition =
+        "left .85s ease, top .85s ease, transform .85s ease, opacity .85s ease";
 
-    chosenData.forEach((data, idx) => {
-      const node = createCardNode(data, idx);
-
-      // без "плавання" в фіналі
-      node.style.animation = 'none';
-
-      // стартовий стан для анімації
-      node.style.opacity = '0';
-      node.style.transform = 'scale(0.8) translateY(12px)';
-
-      // карта вже відкрита
-      node.classList.add('flip', 'revealed');
-
-      // клік — повноекранний перегляд
-      node.addEventListener('click', () => openCardModal(data));
-
-      cardsWrap.appendChild(node);
-
-      // тригеримо плавний в'їзд (два requestAnimationFrame, щоб браузер встиг застосувати стартовий стиль)
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          node.style.opacity = '1';
-          node.style.transform = 'scale(1) translateY(0)';
-        });
-      });
+      node.style.left = finalLeft + "px";
+      node.style.top = targetTop + "px";
     });
 
-    // показати кнопку "Зробити розклад"
+    // --- 4. Показати кнопку "Зробити розклад"
     setTimeout(() => {
       sendBlock.style.display = "flex";
-      setTimeout(() => sendBlock.classList.add("visible"), 20);
-    }, 260);
-  }, 280);
+      requestAnimationFrame(() => sendBlock.classList.add("visible"));
+    }, 450);
+
+  }, 380);
+
+  // через 900мс після руху — знімаємо фіксовану висоту, даємо контейнеру стиснутися
+  setTimeout(() => {
+    cardsWrap.style.height = "200px";
+  }, 900);
+
 }
 
 
-
-
-
+// === Старт сцени вибору 9 карт ===
 function startPickStage() {
   state.cards = getRandomCards(9);
   state.selectedIndices = [];
 
   cardsWrap.classList.remove('center-row');
   cardsWrap.innerHTML = '';
-  cardsWrap.style.height = ''; // скидаємо зафіксовану висоту
+  cardsWrap.style.height = ''; // скинемо, далі воно само
 
   sendBlock.classList.remove('visible');
   sendBlock.style.display = "none";
+
+  const namesDiv = document.getElementById("selected-names");
+  if (namesDiv) {
+    namesDiv.innerHTML = '';
+    namesDiv.classList.add('hidden');
+  }
 
   cardTitle.textContent = "Довірся своїй інтуїції та обери 3 карти";
 
@@ -397,13 +407,9 @@ function startPickStage() {
 btnShuffle.addEventListener('click', () => {
   setStage(shuffleStage);
 
-  // звук тасування на час анімації
   if (shuffleAudio) {
     shuffleAudio.currentTime = 0;
-    const playPromise = shuffleAudio.play();
-    if (playPromise && playPromise.catch) {
-      playPromise.catch(err => console.log('Audio play blocked:', err));
-    }
+    shuffleAudio.play().catch(() => {});
   }
 
   // даємо анімації тасування відпрацювати
@@ -420,9 +426,9 @@ btnSend.addEventListener('click', () => {
   const chosen = state.selectedIndices.map(i => state.cards[i]);
 
   const payload = {
-    action: "three_cards",    // ти в боті ловиш data.action == "three_cards"
-    chosen,                   // 3 карти у порядку вибору
-    candidates: state.cards   // всі 7 карт (якщо захочеш використати)
+    action: "three_cards",
+    chosen,
+    candidates: state.cards
   };
 
   if (tg) {
@@ -433,48 +439,7 @@ btnSend.addEventListener('click', () => {
   }
 });
 
-// стартова сцена
-setStage(introStage);
-
-function handleCardClick(index, node) {
-  // вже вибрана / вже є 3 — не реагуємо
-  if (state.selectedIndices.includes(index)) return;
-  if (state.selectedIndices.length >= 3) return;
-
-  state.selectedIndices.push(index);
-
-  // ▶️ звук перевертання (тільки на реальний клік)
-  if (flipAudio) {
-    try {
-      flipAudio.currentTime = 0;
-      const playPromise = flipAudio.play();
-      if (playPromise && playPromise.catch) {
-        playPromise.catch(err => console.log('Flip audio blocked:', err));
-      }
-    } catch (e) {
-      console.log('Flip audio error:', e);
-    }
-  }
-
-  node.classList.add('flip', 'revealed');
-
-  const left = 3 - state.selectedIndices.length;
-  if (left > 0) {
-    cardTitle.textContent =
-      left === 2 ? "Обери ще 2 карти" :
-      left === 1 ? "Обери ще 1 карту" :
-      "Обери 3 карти";
-    return;
-  }
-
-  // вибрано 3
-  finalizeSelection();
-}
-
-if (flipAudio) {
-  flipAudio.volume = 0.2; // від 0.0 до 1.0
-}
-
+// === Модалка карти ===
 function openCardModal(cardData) {
   if (!cardModal || !cardModalImg) return;
 
@@ -482,14 +447,7 @@ function openCardModal(cardData) {
   if (!info) return;
 
   cardModalImg.src = info.img;
-
-  // перевернута карта — крутимо її
-  if (cardData.upright) {
-    cardModalImg.style.transform = 'none';
-  } else {
-    cardModalImg.style.transform = 'rotate(180deg)';
-  }
-
+  cardModalImg.style.transform = cardData.upright ? 'none' : 'rotate(180deg)';
   cardModal.classList.remove('hidden');
 }
 
@@ -498,8 +456,10 @@ function closeCardModal() {
   cardModal.classList.add('hidden');
 }
 
-// закриваємо по кліку будь-де по модалці
 if (cardModal) {
   cardModal.addEventListener('click', closeCardModal);
 }
+
+// Стартова сцена
+setStage(introStage);
 
