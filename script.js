@@ -197,95 +197,120 @@ function handleCardClick(index, node) {
   setTimeout(finalizeSelection, 700);
 }
 
-// === Фінальна анімація: 3 карти з’їжджають в центр зі своїх місць ===
 // function finalizeSelection() {
 //   cardTitle.textContent = "Твої 3 карти:";
 
-//   const allNodes = Array.from(document.querySelectorAll('.card'));
-//   const selectedNodes = [];
+//   const allNodes = Array.from(document.querySelectorAll(".card"));
 
-//   const wrapRect   = cardsWrap.getBoundingClientRect();
+//   const wrapRect = cardsWrap.getBoundingClientRect();
+//   const wrapWidth = cardsWrap.offsetWidth;
 //   const wrapHeight = cardsWrap.offsetHeight;
-//   const wrapWidth  = cardsWrap.offsetWidth;
 
-//   // 3 вибрані карти (дані)
+//   const selected = [];
 //   const chosenData = state.selectedIndices.map(i => state.cards[i]);
 
-//   // показати назви вибраних карт
+//   // Показуємо назви
 //   const namesDiv = document.getElementById("selected-names");
-//   if (namesDiv) {
-//     namesDiv.innerHTML = chosenData
-//       .map(c => `<div>${CARD_MAP[c.name].ua}</div>`)
-//       .join("");
-//     namesDiv.classList.remove("hidden");
-//   }
+//   namesDiv.innerHTML = chosenData
+//     .map(c => `<div>${CARD_MAP[c.name].ua}</div>`)
+//     .join("");
+//   namesDiv.classList.remove("hidden");
 
-//   // фіксуємо висоту контейнера, щоб при absolute він не схлопнувся
-//   cardsWrap.style.height = wrapHeight + 'px';
+//   // Фіксована висота під анімацію
+//   cardsWrap.style.height = wrapHeight + "px";
 
+//   // --- 1. Переводимо вибрані карти в absolute
 //   allNodes.forEach(node => {
 //     const idx = Number(node.dataset.index);
 
 //     if (state.selectedIndices.includes(idx)) {
-//       selectedNodes.push(node);
-
 //       const rect = node.getBoundingClientRect();
-//       const currentLeft = rect.left - wrapRect.left;
-//       const currentTop  = rect.top  - wrapRect.top;
+//       const left = rect.left - wrapRect.left;
+//       const top = rect.top - wrapRect.top;
 
-//       // переводимо вибрані карти в absolute з їх поточного місця
-//       node.style.position = 'absolute';
-//       node.style.left = currentLeft + 'px';
-//       node.style.top  = currentTop  + 'px';
-//       node.style.zIndex = '2';
-//       node.classList.add('revealed');
+//       node.style.position = "absolute";
+//       node.style.left = left + "px";
+//       node.style.top = top + "px";
+//       node.style.zIndex = "10";
+//       node.style.animation = "none";
+
+//       selected.push({ node, idx });
 //     } else {
-//       // затемнюємо і прибираємо невибрані
-//       node.classList.add('dimmed');
-//       node.style.opacity = '0';
-//       node.style.transform = 'scale(0.85)';
+//       // Невибрані — плавно зникають
+//       node.classList.add("dimmed");
+//       node.style.opacity = "0";
+//       node.style.transform = "scale(0.85)";
 //       setTimeout(() => node.remove(), 350);
 //     }
 //   });
 
-//   if (!selectedNodes.length) return;
+//   // --- 2. Центр для 3 карт
+//   const cardW = selected[0].node.offsetWidth;
+//   const gap = 24;
+//   const totalWidth = cardW * 3 + gap * 2;
+//   const startX = (wrapWidth - totalWidth) / 2;
 
-//   const cardWidth  = selectedNodes[0].offsetWidth;
-//   const cardHeight = selectedNodes[0].offsetHeight;
-//   const gap        = 24;
-//   const totalWidth = cardWidth * selectedNodes.length + gap * (selectedNodes.length - 1);
-//   const startX     = (wrapWidth - totalWidth) / 2;
-//   const targetTop  = (wrapHeight - cardHeight) / 2;
+//   // Картки повинні стояти трохи нижче центру сцени
+//   const cardH = selected[0].node.offsetHeight;
+//   const targetTop = (wrapHeight - cardH) * 0.10;
 
-//   // компактний режим сцени (менше сірої зони)
-//   pickStage.classList.add('compact');
+//   pickStage.classList.add("compact");
+//   pickStage.classList.add("final-compact");
 
-//   // даємо невибраним час згаснути, потім з'їжджаємо 3 карти в центр
+
+//   // --- 3. Плавний переїзд у центр
+//   // setTimeout(() => {
+//   //   selected.forEach(({ node }, i) => {
+//   //     const finalLeft = startX + i * (cardW + gap);
+
+//   //     node.style.transition =
+//   //       "left .85s ease, top .85s ease, transform .85s ease, opacity .85s ease";
+
+//   //     node.style.left = finalLeft + "px";
+//   //     node.style.top = targetTop + "px";
+//   //   });
+
+//   //   // --- 4. Показати кнопку "Зробити розклад"
+//   //   setTimeout(() => {
+//   //     sendBlock.style.display = "flex";
+//   //     requestAnimationFrame(() => sendBlock.classList.add("visible"));
+//   //   }, 450);
+
+//   // }, 1000);
+
 //   setTimeout(() => {
-//     selectedNodes.forEach((node, idx) => {
-//       const targetLeft = startX + idx * (cardWidth + gap);
-//       node.style.left = targetLeft + 'px';
-//       node.style.top  = targetTop  + 'px';
-//       node.style.animation = 'none'; // вже без "float"
+//   selected.forEach(({ node }, i) => {
+//     const finalLeft = startX + i * (cardW + gap);
+//     node.style.transition =
+//       "left .85s ease, top .85s ease, transform .85s ease, opacity .85s ease";
 
-//       // клік — повноекранний перегляд
-//       const cardIndex = state.selectedIndices[idx];
-//       const data = state.cards[cardIndex];
-//       node.addEventListener('click', () => openCardModal(data));
-//     });
+//     node.style.left = finalLeft + "px";
+//     node.style.top  = targetTop + "px";
 
-//     // трішки зменшуємо висоту контейнера під 3 карти
-//     cardsWrap.style.height = (cardHeight + 30) + 'px';
+//     // 🖼 прив’язуємо правильні дані карти
+//     const cardIndex = state.selectedIndices[i];
+//     const cardData  = state.cards[cardIndex];
 
-//     // показати кнопку "Зробити розклад"
-//     setTimeout(() => {
-//       sendBlock.style.display = "flex";
-//       requestAnimationFrame(() => {
-//         sendBlock.classList.add("visible");
-//       });
-//     }, 500);
-//   }, 380);
+//     // клік по фінальній карті → модалка на весь екран
+//     node.onclick = () => openCardModal(cardData);
+//   });
+
+//   // 4. Кнопка
+//   setTimeout(() => {
+//     sendBlock.style.display = "flex";
+//     requestAnimationFrame(() => sendBlock.classList.add("visible"));
+//   }, 450);
+
+// }, 380);
+
+
+//   // через 900мс після руху — знімаємо фіксовану висоту, даємо контейнеру стиснутися
+//   setTimeout(() => {
+//     cardsWrap.style.height = "200px";
+//   }, 1000);
+
 // }
+
 
 function finalizeSelection() {
   cardTitle.textContent = "Твої 3 карти:";
@@ -296,20 +321,25 @@ function finalizeSelection() {
   const wrapWidth = cardsWrap.offsetWidth;
   const wrapHeight = cardsWrap.offsetHeight;
 
-  const selected = [];
-  const chosenData = state.selectedIndices.map(i => state.cards[i]);
+  // *** ГОЛОВНЕ: правильні 3 карти у порядку вибору ***
+  const chosenOrdered = state.selectedIndices.map(i => ({
+    index: i,
+    data: state.cards[i]
+  }));
 
-  // Показуємо назви
+  // Показуємо назви 3 карт у правильному порядку
   const namesDiv = document.getElementById("selected-names");
-  namesDiv.innerHTML = chosenData
-    .map(c => `<div>${CARD_MAP[c.name].ua}</div>`)
+  namesDiv.innerHTML = chosenOrdered
+    .map(obj => `<div>${CARD_MAP[obj.data.name].ua}</div>`)
     .join("");
   namesDiv.classList.remove("hidden");
 
-  // Фіксована висота під анімацію
+  // Фіксуємо висоту
   cardsWrap.style.height = wrapHeight + "px";
 
-  // --- 1. Переводимо вибрані карти в absolute
+  let selected = [];
+
+  // --- 1. Переводимо вибрані карти в absolute, але без зміни порядку
   allNodes.forEach(node => {
     const idx = Number(node.dataset.index);
 
@@ -326,7 +356,7 @@ function finalizeSelection() {
 
       selected.push({ node, idx });
     } else {
-      // Невибрані — плавно зникають
+      // Невибрані прибираються
       node.classList.add("dimmed");
       node.style.opacity = "0";
       node.style.transform = "scale(0.85)";
@@ -334,23 +364,28 @@ function finalizeSelection() {
     }
   });
 
-  // --- 2. Центр для 3 карт
+  // --- ВАЖЛИВО: сортуємо вибрані карти у тому порядку, як їх тицнули ---
+  selected.sort((a, b) =>
+    state.selectedIndices.indexOf(a.idx) -
+    state.selectedIndices.indexOf(b.idx)
+  );
+
+  // --- 2. Розрахунок позицій у центрі ---
   const cardW = selected[0].node.offsetWidth;
   const gap = 24;
   const totalWidth = cardW * 3 + gap * 2;
   const startX = (wrapWidth - totalWidth) / 2;
 
-  // Картки повинні стояти трохи нижче центру сцени
   const cardH = selected[0].node.offsetHeight;
   const targetTop = (wrapHeight - cardH) * 0.10;
 
   pickStage.classList.add("compact");
   pickStage.classList.add("final-compact");
 
-
-  // --- 3. Плавний переїзд у центр
+  // --- 3. Плавний переїзд вибраних карт ---
   setTimeout(() => {
-    selected.forEach(({ node }, i) => {
+    selected.forEach((sel, i) => {
+      const node = sel.node;
       const finalLeft = startX + i * (cardW + gap);
 
       node.style.transition =
@@ -358,9 +393,13 @@ function finalizeSelection() {
 
       node.style.left = finalLeft + "px";
       node.style.top = targetTop + "px";
+
+      // *** ПРАВИЛЬНА МОДАЛКА: беремо карту в тому порядку, як вибрано ***
+      const correctCard = chosenOrdered[i].data;
+      node.onclick = () => openCardModal(correctCard);
     });
 
-    // --- 4. Показати кнопку "Зробити розклад"
+    // Кнопка "Зробити розклад"
     setTimeout(() => {
       sendBlock.style.display = "flex";
       requestAnimationFrame(() => sendBlock.classList.add("visible"));
@@ -368,12 +407,12 @@ function finalizeSelection() {
 
   }, 380);
 
-  // через 900мс після руху — знімаємо фіксовану висоту, даємо контейнеру стиснутися
+  // Дати контейнеру схуднути
   setTimeout(() => {
     cardsWrap.style.height = "200px";
   }, 900);
-
 }
+
 
 
 // === Старт сцени вибору 9 карт ===
